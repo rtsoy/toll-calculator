@@ -38,6 +38,7 @@ func NewKafkaProducer(topic string) (DataProducer, error) {
 
 	return &KafkaProducer{
 		producer: p,
+		topic:    topic,
 	}, nil
 }
 

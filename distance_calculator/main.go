@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import "github.com/sirupsen/logrus"
+
+const kafkaTopic = "obudata"
 
 func main() {
-	fmt.Println("this is working just fine")
+	csv := NewCalculatorService()
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, csv)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	kafkaConsumer.Start()
 }
