@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/rtsoy/toll-calculator/types"
 )
 
@@ -20,6 +19,5 @@ func NewInvoiceAggregator(store Storer) Aggregator {
 }
 
 func (i *InvoiceAggregator) AggregateDistance(distance types.Distance) error {
-	fmt.Println("processing and inserting distance in the storage:", distance)
 	return i.store.Insert(distance)
 }
