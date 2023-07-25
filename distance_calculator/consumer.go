@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/rtsoy/toll-calculator/types"
 	"github.com/sirupsen/logrus"
@@ -59,6 +58,6 @@ func (c *KafkaConsumer) readMessageLoop() {
 			continue
 		}
 
-		fmt.Printf("distance: %.2f\n", distance)
+		_ = distance
 	}
 }

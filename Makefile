@@ -4,6 +4,8 @@
 
 # go build -o bin/distance_calculator.exe ./distance_calculator; ./bin/distance_calculator.exe
 
+# go build -o bin/aggregator.exe ./aggregator; .\bin\aggregator.exe
+
 obu:
 	@go build -o bin/obu obu/main.go
 	@./bin/obu
@@ -15,3 +17,7 @@ receiver:
 calculator:
 	@go build -o bin/distance_calculator ./distance_calculator
 	@./bin/distance_calculator
+
+calculator:
+	@go build -o bin/aggregator ./aggregator
+	@./bin/aggregator

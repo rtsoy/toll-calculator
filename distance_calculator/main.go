@@ -5,8 +5,12 @@ import "github.com/sirupsen/logrus"
 const kafkaTopic = "obudata"
 
 func main() {
-	csv := NewCalculatorService()
-	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, csv)
+	var (
+		csv  = NewCalculatorService()
+		csvm = NewLogMiddleware(csv)
+	)
+
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, csvm)
 	if err != nil {
 		logrus.Fatal(err)
 	}

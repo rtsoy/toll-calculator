@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	sendInterval = 1 * time.Second
+	sendInterval = 5 * time.Second
 	wsEndpoint   = "ws://127.0.0.1:30000/ws"
 )
 
