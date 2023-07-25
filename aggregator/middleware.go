@@ -16,10 +16,20 @@ func NewLogMiddleware(next Aggregator) Aggregator {
 	}
 }
 
+func (l *LogMiddleware) CalculateInvoice(id int) (invoice *types.Invoice, err error) {
+	defer func(start time.Time) {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+			"took":  time.Since(start),
+		}).Info("calculate invoice")
+	}(time.Now())
+
+	return l.next.CalculateInvoice(id)
+}
+
 func (l *LogMiddleware) AggregateDistance(distance types.Distance) (err error) {
 	defer func(start time.Time) {
 		logrus.WithFields(logrus.Fields{
-			"data":  distance,
 			"error": err,
 			"took":  time.Since(start),
 		}).Info("aggregate distance")
