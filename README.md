@@ -1,5 +1,13 @@
 # toll-calculator
 
 ```
-docker run --name kafka -p 9092:9092 -e ALLOW_PLAINTEXT_LISTENER=yes -e KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true bitnami/kafka:latest
+docker-compose up -d
+```
+
+```
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+```
+
+```
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 ```
