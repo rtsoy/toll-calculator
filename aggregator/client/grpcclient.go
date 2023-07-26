@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"github.com/rtsoy/toll-calculator/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,4 +22,9 @@ func NewGRPCClient(endpoint string) (*GRPCClient, error) {
 	return &GRPCClient{
 		Client: c,
 	}, nil
+}
+
+func (c *GRPCClient) Aggregate(ctx context.Context, request *types.AggregateRequest) error {
+	_, err := c.Client.Aggregate(ctx, request)
+	return err
 }

@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatal("NewGRPCClient:", err)
 	}
-	if _, err := c.Client.Aggregate(context.Background(), &types.AggregateRequest{
+	if err := c.Aggregate(context.Background(), &types.AggregateRequest{
 		ObuID: 1,
 		Value: 534.3,
 		Unix:  time.Now().UnixNano(),
