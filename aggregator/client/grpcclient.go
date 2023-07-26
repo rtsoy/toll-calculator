@@ -11,7 +11,7 @@ type GRPCClient struct {
 	Client types.AggregatorClient
 }
 
-func NewGRPCClient(endpoint string) (*GRPCClient, error) {
+func NewGRPCClient(endpoint string) (Client, error) {
 	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
@@ -22,6 +22,10 @@ func NewGRPCClient(endpoint string) (*GRPCClient, error) {
 	return &GRPCClient{
 		Client: c,
 	}, nil
+}
+
+func (c *GRPCClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, error) {
+	panic("implement me")
 }
 
 func (c *GRPCClient) Aggregate(ctx context.Context, request *types.AggregateRequest) error {

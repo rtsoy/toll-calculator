@@ -3,12 +3,11 @@ package main
 import (
 	"github.com/rtsoy/toll-calculator/aggregator/client"
 	"github.com/sirupsen/logrus"
-	"log"
 )
 
 const (
 	kafkaTopic  = "obudata"
-	aggEndpoint = "http://127.0.0.1:3000/aggregate"
+	aggEndpoint = "http://127.0.0.1:3000"
 )
 
 func main() {
@@ -18,13 +17,13 @@ func main() {
 
 	csv = NewLogMiddleware(csv)
 
-	// httpClient := client.NewHTTPClient(aggEndpoint)
-	grpcClient, err := client.NewGRPCClient(aggEndpoint)
-	if err != nil {
-		log.Fatal(err)
-	}
+	httpClient := client.NewHTTPClient(aggEndpoint)
+	// grpcClient, err := client.NewGRPCClient(aggEndpoint)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, csv, grpcClient)
+	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, csv, httpClient)
 	if err != nil {
 		logrus.Fatal(err)
 	}
