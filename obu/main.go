@@ -18,7 +18,7 @@ func generateOBUIDs(n int) []int {
 	ids := make([]int, n)
 
 	for i := 0; i < n; i++ {
-		ids[i] = rand.Intn(math.MaxInt)
+		ids[i] = rand.Intn(math.MaxInt32)
 	}
 
 	return ids

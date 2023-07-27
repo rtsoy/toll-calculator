@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/rtsoy/toll-calculator/aggregator/client"
 	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type apiFunc func(http.ResponseWriter, *http.Request) error
@@ -37,9 +39,25 @@ func NewInvoiceHandler(c client.Client) *InvoiceHandler {
 }
 
 func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
-	inv, err := h.client.GetInvoice(r.Context(), 1)
+	values, ok := r.URL.Query()["obuID"]
+	if !ok {
+		return writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "missing obuID",
+		})
+	}
+
+	obuID, err := strconv.Atoi(values[0])
 	if err != nil {
-		return err
+		return writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid obuID",
+		})
+	}
+
+	inv, err := h.client.GetInvoice(r.Context(), obuID)
+	if err != nil {
+		return writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": fmt.Sprintf("could not find a distance for obuID=%d", obuID),
+		})
 	}
 
 	return writeJSON(w, http.StatusOK, inv)
