@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rtsoy/toll-calculator/aggregator/client"
 	"github.com/rtsoy/toll-calculator/types"
 	"google.golang.org/grpc"
@@ -26,6 +27,7 @@ func main() {
 	)
 
 	svc = NewLogMiddleware(svc)
+	svc = NewMetricsMiddleware(svc)
 
 	go func() {
 		log.Fatal(makeGRPCTransport(*grpcAddr, svc))
@@ -66,6 +68,9 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) {
 
 	http.HandleFunc("/aggregate", handleAggregate(svc))
 	http.HandleFunc("/invoice", handleGetInvoice(svc))
+
+	// Prometheus
+	http.Handle("/metrics", promhttp.Handler())
 
 	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
