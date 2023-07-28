@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rtsoy/toll-calculator/aggregator/client"
@@ -12,28 +11,29 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	httpAddr := flag.String("httpAddr", ":3000", "The listen address of the HTTP server")
-	grpcAddr := flag.String("grpcAddr", ":3001", "The listen address of the HTTP server")
-	flag.Parse()
-
 	var (
-		store = NewMemoryStore()
-		svc   = NewInvoiceAggregator(store)
+		httpAddr = os.Getenv("AGG_HTTP_ENDPOINT")
+		grpcAddr = os.Getenv("AGG_GRPC_ENDPOINT")
+		store    = makeStore()
+		svc      = NewInvoiceAggregator(store)
 	)
 
 	svc = NewLogMiddleware(svc)
 	svc = NewMetricsMiddleware(svc)
 
 	go func() {
-		log.Fatal(makeGRPCTransport(*grpcAddr, svc))
+		log.Fatal(makeGRPCTransport(grpcAddr, svc))
 	}()
 	time.Sleep(time.Second * 1)
-	c, err := client.NewGRPCClient(*grpcAddr)
+	c, err := client.NewGRPCClient(grpcAddr)
 	if err != nil {
 		log.Fatal("NewGRPCClient:", err)
 	}
@@ -45,7 +45,7 @@ func main() {
 		log.Fatal("Aggregate:", err)
 	}
 
-	makeHTTPTransport(*httpAddr, svc)
+	makeHTTPTransport(httpAddr, svc)
 }
 
 func makeGRPCTransport(listenAddr string, svc Aggregator) error {
@@ -77,6 +77,13 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) {
 
 func handleGetInvoice(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{
+				"error": "Method Not Allowed",
+			})
+			return
+		}
+
 		values, ok := r.URL.Query()["obuID"]
 		if !ok {
 			writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -107,6 +114,13 @@ func handleGetInvoice(svc Aggregator) http.HandlerFunc {
 
 func handleAggregate(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{
+				"error": "Method Not Allowed",
+			})
+			return
+		}
+
 		var distance types.Distance
 		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -129,4 +143,16 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 	w.Header().Add("Content-Type", "application/json")
 
 	return json.NewEncoder(w).Encode(v)
+}
+
+func makeStore() Storer {
+	storeType := os.Getenv("AGG_STORE_TYPE")
+
+	switch storeType {
+	case "memory":
+		return NewMemoryStore()
+	default:
+		log.Fatalf("invalid store type: %s", storeType)
+		return nil
+	}
 }
