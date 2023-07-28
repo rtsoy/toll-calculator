@@ -26,7 +26,6 @@ func main() {
 	go func() {
 		log.Fatal(makeGRPCTransport(grpcAddr, svc))
 	}()
-
 	makeHTTPTransport(httpAddr, svc)
 }
 
@@ -51,8 +50,16 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) {
 	aggMetricHandler := NewHTTPMetricHandler("aggregate")
 	invMetricHandler := NewHTTPMetricHandler("calculate")
 
-	http.HandleFunc("/aggregate", aggMetricHandler.instrument(handleAggregate(svc)))
-	http.HandleFunc("/invoice", invMetricHandler.instrument(handleGetInvoice(svc)))
+	http.HandleFunc("/aggregate", makeHTTPHandler(
+		aggMetricHandler.instrument(handleAggregate(svc))),
+	)
+	http.HandleFunc("/invoice", makeHTTPHandler(
+		invMetricHandler.instrument(handleGetInvoice(svc))),
+	)
+
+	// No metrics
+	//http.HandleFunc("/invoice", makeHTTPHandler(handleGetInvoice(svc)))
+	//http.HandleFunc("/aggregate", makeHTTPHandler(handleAggregate(svc)))
 
 	// Prometheus
 	http.Handle("/metrics", promhttp.Handler())
