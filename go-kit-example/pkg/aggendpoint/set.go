@@ -2,14 +2,45 @@ package aggendpoint
 
 import (
 	"context"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/rtsoy/toll-calculator/go-kit-example/aggservice"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/ratelimit"
+	"github.com/rtsoy/toll-calculator/go-kit-example/pkg/aggservice"
 	"github.com/rtsoy/toll-calculator/types"
+	"github.com/sony/gobreaker"
+	"golang.org/x/time/rate"
+	"time"
 )
 
 type Set struct {
 	AggregateEndpoint endpoint.Endpoint
 	CalculateEndpoint endpoint.Endpoint
+}
+
+func New(svc aggservice.Service, logger log.Logger) Set {
+	var aggEndpoint endpoint.Endpoint
+	{
+		aggEndpoint = MakeAggregateEndpoint(svc)
+		aggEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(aggEndpoint)
+		aggEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(aggEndpoint)
+		// aggEndpoint = LoggingMiddleware(log.With(logger, "method", "Aggregate"))(aggEndpoint)
+		// aggEndpoint = InstrumentingMiddleware(duration.With("method", "Aggregate"))(aggEndpoint)
+	}
+
+	var calcEndpoint endpoint.Endpoint
+	{
+		calcEndpoint = MakeCalculateEndpoint(svc)
+		calcEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Limit(1), 100))(calcEndpoint)
+		calcEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(calcEndpoint)
+		// calcEndpoint = LoggingMiddleware(log.With(logger, "method", "Calculate"))(calcEndpoint)
+		// calcEndpoint = InstrumentingMiddleware(duration.With("method", "Calculate"))(calcEndpoint)
+	}
+
+	return Set{
+		AggregateEndpoint: aggEndpoint,
+		CalculateEndpoint: calcEndpoint,
+	}
 }
 
 type CalculateRequest struct {

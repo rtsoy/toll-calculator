@@ -41,10 +41,10 @@ func (bs *BasicService) Calculate(ctx context.Context, id int) (*types.Invoice, 
 	return inv, nil
 }
 
-func NewAggregatorService(store Storer) Service {
+func New() Service {
 	var svc Service
 	{
-		svc = newBasicService(store)
+		svc = newBasicService(NewMemoryStore())
 		svc = NewLoggingMiddleware()(svc)
 		svc = NewInstrumentationMiddleware()(svc)
 	}
