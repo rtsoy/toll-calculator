@@ -2,6 +2,10 @@ package main
 
 import (
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rtsoy/toll-calculator/go-kit-example/pkg/aggendpoint"
 	"github.com/rtsoy/toll-calculator/go-kit-example/pkg/aggservice"
 	"github.com/rtsoy/toll-calculator/go-kit-example/pkg/aggtransport"
@@ -18,9 +22,20 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
+	var duration metrics.Histogram
+	{
+		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "tollCalculator",
+			Subsystem: "aggService",
+			Name:      "request_duration_seconds",
+			Help:      "Request duration in seconds.",
+		}, []string{"method", "success"})
+	}
+	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
+
 	var (
-		service     = aggservice.New()
-		endpoints   = aggendpoint.New(service, logger)
+		service     = aggservice.New(logger)
+		endpoints   = aggendpoint.New(service, logger, duration)
 		httpHandler = aggtransport.NewHTTPHandler(endpoints, logger)
 	)
 
